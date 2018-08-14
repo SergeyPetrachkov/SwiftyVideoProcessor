@@ -12,6 +12,8 @@
 		398C1A6A2122F1E700E7BF4B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 398C1A682122F1E700E7BF4B /* Main.storyboard */; };
 		398C1A6C2122F1E800E7BF4B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 398C1A6B2122F1E800E7BF4B /* Assets.xcassets */; };
 		398C1A6F2122F1E800E7BF4B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 398C1A6D2122F1E800E7BF4B /* LaunchScreen.storyboard */; };
+		398C1A782122F3CC00E7BF4B /* VideosListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398C1A772122F3CC00E7BF4B /* VideosListController.swift */; };
+		398C1A7A212307F900E7BF4B /* VideoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398C1A79212307F900E7BF4B /* VideoProcessor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +24,8 @@
 		398C1A6B2122F1E800E7BF4B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		398C1A6E2122F1E800E7BF4B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		398C1A702122F1E800E7BF4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		398C1A772122F3CC00E7BF4B /* VideosListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideosListController.swift; sourceTree = "<group>"; };
+		398C1A79212307F900E7BF4B /* VideoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoProcessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +58,7 @@
 		398C1A632122F1E700E7BF4B /* PreUploadVideoProcessor */ = {
 			isa = PBXGroup;
 			children = (
+				398C1A762122F28700E7BF4B /* ProcessingQueue */,
 				398C1A642122F1E700E7BF4B /* AppDelegate.swift */,
 				398C1A662122F1E700E7BF4B /* ViewController.swift */,
 				398C1A682122F1E700E7BF4B /* Main.storyboard */,
@@ -62,6 +67,15 @@
 				398C1A702122F1E800E7BF4B /* Info.plist */,
 			);
 			path = PreUploadVideoProcessor;
+			sourceTree = "<group>";
+		};
+		398C1A762122F28700E7BF4B /* ProcessingQueue */ = {
+			isa = PBXGroup;
+			children = (
+				398C1A772122F3CC00E7BF4B /* VideosListController.swift */,
+				398C1A79212307F900E7BF4B /* VideoProcessor.swift */,
+			);
+			path = ProcessingQueue;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -137,6 +151,8 @@
 			files = (
 				398C1A672122F1E700E7BF4B /* ViewController.swift in Sources */,
 				398C1A652122F1E700E7BF4B /* AppDelegate.swift in Sources */,
+				398C1A7A212307F900E7BF4B /* VideoProcessor.swift in Sources */,
+				398C1A782122F3CC00E7BF4B /* VideosListController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,6 +297,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = TVTBG99HF3;
 				INFOPLIST_FILE = PreUploadVideoProcessor/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -298,6 +315,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = TVTBG99HF3;
 				INFOPLIST_FILE = PreUploadVideoProcessor/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
