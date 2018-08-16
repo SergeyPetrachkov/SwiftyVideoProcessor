@@ -60,7 +60,7 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     controller.sourceType = .photoLibrary
     controller.mediaTypes = ["public.movie"]
     controller.allowsEditing = false
-    controller.videoExportPreset = AVAssetExportPreset960x540
+    controller.videoExportPreset = AVAssetExportPresetHighestQuality
     
     return controller
   }()
@@ -108,40 +108,40 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
       
       let tempDirectory = NSTemporaryDirectory()
       let processedURL = URL(fileURLWithPath: tempDirectory.appending(UUID().uuidString).appending(".mp4"))
-      
-      let asset = AVAsset(url: videoURL)
-      
-      let encoder = AssetExportSession(asset: asset,
-                                       outputUrl: processedURL,
-                                       outputFileType: .mp4,
-                                       videoSettings: [
-                                        AVVideoCodecKey: AVVideoCodecType.h264,
-                                        AVVideoWidthKey: 600,
-                                        AVVideoHeightKey: 400],
-                                       audioSettings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVNumberOfChannelsKey: 2, AVSampleRateKey: 44100, AVEncoderBitRateKey: 128000])
-      encoder.delegate = self
-      
-      do {
-        try encoder.exportAsynchronously {
-            print(encoder.getStatus())
-          DispatchQueue.main.async {
-            PHPhotoLibrary.shared().performChanges({
-              PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: processedURL)
-            }) { saved, error in
-              if saved {
-                let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
-                let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-                alertController.addAction(defaultAction)
-                self.present(alertController, animated: true, completion: nil)
-              }
-            }
-          }
+      self.cropVideo(url: videoURL, outputUrl: processedURL)
+//      let asset = AVAsset(url: videoURL)
 //
-
-        }
-      } catch let error {
-        print("\(error)")
-      }
+//      let encoder = AssetExportSession(asset: asset,
+//                                       outputUrl: processedURL,
+//                                       outputFileType: .mov,
+//                                       videoSettings: [
+//                                        AVVideoCodecKey: AVVideoCodecType.h264,
+//                                        AVVideoWidthKey: 600,
+//                                        AVVideoHeightKey: 400],
+//                                       audioSettings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVNumberOfChannelsKey: 2, AVSampleRateKey: 44100, AVEncoderBitRateKey: 128000])
+//      encoder.delegate = self
+//
+//      do {
+//        try encoder.exportAsynchronously {
+//            print(encoder.getStatus())
+//          DispatchQueue.main.async {
+//            PHPhotoLibrary.shared().performChanges({
+//              PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: processedURL)
+//            }) { saved, error in
+//              if saved {
+//                let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
+//                let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+//                alertController.addAction(defaultAction)
+//                self.present(alertController, animated: true, completion: nil)
+//              }
+//            }
+//          }
+////
+//
+//        }
+//      } catch let error {
+//        print("\(error)")
+//      }
     }
   }
   
@@ -155,5 +155,81 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
   
   func exportSession(_ exportSession: SDAVAssetExportSession!, renderFrame pixelBuffer: CVPixelBuffer!, withPresentationTime presentationTime: CMTime, to renderBuffer: CVPixelBuffer!) {
     print(exportSession)
+  }
+  
+  
+  func cropVideo(url: URL, outputUrl: URL, targetSize: CGSize = CGSize(width: 600, height: 400)) {
+    let asset = AVAsset(url: url)
+    guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+      return
+    }
+    //create an avassetrack with our asset
+    let naturalSize = videoTrack.naturalSize
+//    var clipVideoTrack: AVAssetTrack? = asset.tracks(withMediaType: .video)[0]
+    //create a video composition and preset some settings
+    let  videoComposition = AVMutableVideoComposition(propertiesOf: asset)
+    videoComposition.frameDuration = CMTimeMake(1, 30)
+    //here we are setting its render size to its height x height (Square)
+    videoComposition.renderSize = CGSize(width: targetSize.width, height: targetSize.height)
+    //create a video instruction
+    let instruction = AVMutableVideoCompositionInstruction()
+    instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30))
+    let transformer: AVMutableVideoCompositionLayerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+    
+    
+    //Here we shift the viewing square up to the TOP of the video so we only see the top
+//    let widthDelta: CGFloat = videoTrack.naturalSize.width - desiredSize.width
+//    let heightDelta: CGFloat = videoTrack.naturalSize.height - desiredSize.height
+//
+    
+    let ratio: CGFloat = 0.67
+    let xratio: CGFloat = targetSize.width / naturalSize.width
+    let yratio: CGFloat = targetSize.height / naturalSize.height
+    let postWidth: CGFloat = naturalSize.width * ratio
+    let postHeight: CGFloat = naturalSize.height * ratio
+    let transx: CGFloat = (targetSize.width - postWidth) / 2
+    let transy: CGFloat = (targetSize.height - postHeight) / 2
+    let matrix = CGAffineTransform(translationX: transx / xratio, y: transy / yratio)
+    var transform = videoTrack.preferredTransform
+    transform = transform.concatenating(matrix)
+
+    
+//    let t1 = CGAffineTransform(translationX: targetSize.width, y: targetSize.height)
+//
+//    let t2: CGAffineTransform = t1.rotated(by: CGFloat.pi)
+//    let finalTransform: CGAffineTransform = t2
+//
+    transformer.setTransform(transform, at: kCMTimeZero)
+    
+    instruction.layerInstructions = [transformer]
+    videoComposition.instructions = [instruction]
+    
+    
+    
+    
+    
+    
+    //Remove any prevouis videos at that path
+    try? FileManager.default.removeItem(at: outputUrl)
+    //Export
+    let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality)!
+    exporter.videoComposition = videoComposition
+    exporter.outputURL = outputUrl
+    exporter.outputFileType = .mp4
+    exporter.exportAsynchronously(completionHandler: {
+      DispatchQueue.main.async(execute: {
+        //Call when finished
+        PHPhotoLibrary.shared().performChanges({
+          PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: outputUrl)
+        }) { saved, error in
+          if saved {
+            let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
+            let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            alertController.addAction(defaultAction)
+            self.present(alertController, animated: true, completion: nil)
+          }
+        }
+      })
+    })
   }
 }

@@ -190,56 +190,80 @@ class AssetExportSession: NSObject {
     guard let videoTrack = self.asset.tracks(withMediaType: .video).first else {
       return nil
     }
+    //create an avassetrack with our asset
     
-    let videoComposition = AVMutableVideoComposition(propertiesOf: self.asset)
+    var clipVideoTrack: AVAssetTrack? = asset.tracks(withMediaType: .video)[0]
+    //create a video composition and preset some settings
+    var videoComposition = AVMutableVideoComposition(propertiesOf: self.asset)
+    videoComposition.frameDuration = CMTimeMake(1, 30)
+    //here we are setting its render size to its height x height (Square)
+    videoComposition.renderSize = CGSize(width: 600, height: 400)
+    //create a video instruction
+    var instruction = AVMutableVideoCompositionInstruction()
+    instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30))
+    var transformer: AVMutableVideoCompositionLayerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
     
-    // get the frame rate from videoSettings, if not set then try to get it from the video track,
-    // if not set (mainly when asset is AVComposition) then use the default frame rate of 30
-    var trackFrameRate: Float = 0
     
-    if let compressionProperties = self.videoSettings[AVVideoCompressionPropertiesKey] as? [String: Any],
-      let frameRate = compressionProperties[AVVideoAverageNonDroppableFrameRateKey] as? Float {
-      trackFrameRate = frameRate
-    } else {
-      trackFrameRate = videoTrack.nominalFrameRate
-    }
-    
-    if trackFrameRate == 0 {
-      trackFrameRate = 30
-    }
-    
-
-    videoComposition.frameDuration = CMTimeMake(1, Int32.init(trackFrameRate))
-    
-    let width: Double = (self.videoSettings[AVVideoWidthKey] as? NSNumber)?.doubleValue ?? 0
-    let height: Double = (self.videoSettings[AVVideoHeightKey] as? NSNumber)?.doubleValue ?? 0
-    
-    let targetSize = CGSize(width: width, height: height)
-    
-    var naturalSize: CGSize = videoTrack.naturalSize
-    var transform: CGAffineTransform = videoTrack.preferredTransform
+    //Here we shift the viewing square up to the TOP of the video so we only see the top
+    var t1 = CGAffineTransform(translationX: videoTrack.naturalSize.height, y: 0)
+    //Use this code if you want the viewing square to be in the middle of the video
+    //CGAffineTransform t1 = CGAffineTransformMakeTranslation(clipVideoTrack.naturalSize.height, -(clipVideoTrack.naturalSize.width - clipVideoTrack.naturalSize.height) /2 );
+    //Make sure the square is portrait
+    var t2: CGAffineTransform = t1.rotated(by: CGFloat.pi)
+    var finalTransform: CGAffineTransform = t2
+    transformer.setTransform(finalTransform, at: kCMTimeZero)
+    //add the transformer layer instructions, then add to video composition
+    instruction.layerInstructions = [transformer]
+    videoComposition.instructions = [instruction]
+//    let videoComposition = AVMutableVideoComposition(propertiesOf: self.asset)
+//    videoComposition.renderSize = CGSize(width: 600, height: 400)
+//    // get the frame rate from videoSettings, if not set then try to get it from the video track,
+//    // if not set (mainly when asset is AVComposition) then use the default frame rate of 30
+//    var trackFrameRate: Float = 0
+//
+//    if let compressionProperties = self.videoSettings[AVVideoCompressionPropertiesKey] as? [String: Any],
+//      let frameRate = compressionProperties[AVVideoAverageNonDroppableFrameRateKey] as? Float {
+//      trackFrameRate = frameRate
+//    } else {
+//      trackFrameRate = videoTrack.nominalFrameRate
+//    }
+//
+//    if trackFrameRate == 0 {
+//      trackFrameRate = 30
+//    }
+//
+//
+//    videoComposition.frameDuration = CMTimeMake(1, Int32.init(trackFrameRate))
+//
+//    let width: Double = (self.videoSettings[AVVideoWidthKey] as? NSNumber)?.doubleValue ?? 0
+//    let height: Double = (self.videoSettings[AVVideoHeightKey] as? NSNumber)?.doubleValue ?? 0
+//
+//    let targetSize = CGSize(width: width, height: height)
+//
+//    var naturalSize: CGSize = videoTrack.naturalSize
+//    var transform: CGAffineTransform = videoTrack.preferredTransform
 //    let rect = CGRect(origin: .zero, size: naturalSize)
 //
 //    let transformedRect = rect.applying(transform);
 //    // transformedRect should have origin at 0 if correct; otherwise add offset to correct it
 //    transform.tx -= transformedRect.origin.x;
 //    transform.ty -= transformedRect.origin.y;
-    
-    // Workaround radar 31928389, see https://github.com/rs/SDAVAssetExportSession/pull/70 for more info
-    if transform.ty == -560 {
-      transform.ty = 0
-    }
-    if transform.tx == -560 {
-      transform.tx = 0
-    }
-    
-    let videoAngleInDegree: CGFloat = atan2(transform.b, transform.a) * 180 / .pi
-    if videoAngleInDegree == 90 || videoAngleInDegree == -90 {
-      let width: CGFloat? = naturalSize.width
-      naturalSize.width = naturalSize.height
-      naturalSize.height = width ?? 0.0
-    }
-    videoComposition.renderSize = naturalSize
+//
+//    // Workaround radar 31928389, see https://github.com/rs/SDAVAssetExportSession/pull/70 for more info
+//    if transform.ty == -560 {
+//      transform.ty = 0
+//    }
+//    if transform.tx == -560 {
+//      transform.tx = 0
+//    }
+//
+//    let videoAngleInDegree: CGFloat = atan2(transform.b, transform.a) * 180 / .pi
+//    if videoAngleInDegree == 90 || videoAngleInDegree == -90 {
+//      let width: CGFloat? = naturalSize.width
+//      naturalSize.width = naturalSize.height
+//      naturalSize.height = width ?? 0.0
+//    }
+//    videoComposition.renderSize = naturalSize
     
 //    // center inside
 //    let ratio: CGFloat = 0.0
@@ -256,12 +280,12 @@ class AssetExportSession: NSObject {
     // Make a "pass through video track" video composition.
     
     
-    let passThroughInstruction = AVMutableVideoCompositionInstruction()
-    passThroughInstruction.timeRange = CMTimeRange(start: kCMTimeZero, duration: self.asset.duration)
-    let passThroughLayer = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
-    passThroughLayer.setTransform(transform, at: kCMTimeZero)
-    passThroughInstruction.layerInstructions = [passThroughLayer]
-    videoComposition.instructions = [passThroughInstruction]
+//    let passThroughInstruction = AVMutableVideoCompositionInstruction()
+//    passThroughInstruction.timeRange = CMTimeRange(start: kCMTimeZero, duration: self.asset.duration)
+//    let passThroughLayer = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+//    passThroughLayer.setTransform(transform, at: kCMTimeZero)
+//    passThroughInstruction.layerInstructions = [passThroughLayer]
+//    videoComposition.instructions = [passThroughInstruction]
     return videoComposition
   }
   
