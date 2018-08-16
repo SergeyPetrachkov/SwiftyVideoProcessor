@@ -60,7 +60,7 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     controller.sourceType = .photoLibrary
     controller.mediaTypes = ["public.movie"]
     controller.allowsEditing = false
-    controller.videoExportPreset = AVAssetExportPresetHighestQuality
+    controller.videoExportPreset = AVAssetExportPreset640x480
     
     return controller
   }()
@@ -182,7 +182,7 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
 //    let heightDelta: CGFloat = videoTrack.naturalSize.height - desiredSize.height
 //
     
-    let ratio: CGFloat = 0.67
+    let ratio: CGFloat = 4/3
     let xratio: CGFloat = targetSize.width / naturalSize.width
     let yratio: CGFloat = targetSize.height / naturalSize.height
     let postWidth: CGFloat = naturalSize.width * ratio
@@ -192,6 +192,8 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     let matrix = CGAffineTransform(translationX: transx / xratio, y: transy / yratio)
     var transform = videoTrack.preferredTransform
     transform = transform.concatenating(matrix)
+    let t = transform.concatenating(CGAffineTransform(scaleX: 1.3, y: 1.3))
+    
 
     
 //    let t1 = CGAffineTransform(translationX: targetSize.width, y: targetSize.height)
@@ -199,7 +201,7 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
 //    let t2: CGAffineTransform = t1.rotated(by: CGFloat.pi)
 //    let finalTransform: CGAffineTransform = t2
 //
-    transformer.setTransform(transform, at: kCMTimeZero)
+    transformer.setTransform(t, at: kCMTimeZero)
     
     instruction.layerInstructions = [transformer]
     videoComposition.instructions = [instruction]
