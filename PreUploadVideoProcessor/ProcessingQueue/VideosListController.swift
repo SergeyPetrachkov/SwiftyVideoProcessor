@@ -53,7 +53,7 @@ extension UIViewController {
 }
 
 
-class VideosListController: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, SDAVAssetExportSessionDelegate, AssetExportSessionDelegate {
+class VideosListController: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
   
   let imagePickerController: UIImagePickerController = {
     let controller = UIImagePickerController()
@@ -102,59 +102,15 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
   func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
     
     if let videoURL = info[UIImagePickerControllerMediaURL] as? URL {
-//      DispatchQueue.main.async {
-        picker.dismiss(animated: true, completion: nil)
-//      }
-      
+      picker.dismiss(animated: true, completion: nil)
       let tempDirectory = NSTemporaryDirectory()
       let processedURL = URL(fileURLWithPath: tempDirectory.appending(UUID().uuidString).appending(".mp4"))
       self.cropVideo(url: videoURL, outputUrl: processedURL)
-//      let asset = AVAsset(url: videoURL)
-//
-//      let encoder = AssetExportSession(asset: asset,
-//                                       outputUrl: processedURL,
-//                                       outputFileType: .mov,
-//                                       videoSettings: [
-//                                        AVVideoCodecKey: AVVideoCodecType.h264,
-//                                        AVVideoWidthKey: 600,
-//                                        AVVideoHeightKey: 400],
-//                                       audioSettings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVNumberOfChannelsKey: 2, AVSampleRateKey: 44100, AVEncoderBitRateKey: 128000])
-//      encoder.delegate = self
-//
-//      do {
-//        try encoder.exportAsynchronously {
-//            print(encoder.getStatus())
-//          DispatchQueue.main.async {
-//            PHPhotoLibrary.shared().performChanges({
-//              PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: processedURL)
-//            }) { saved, error in
-//              if saved {
-//                let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
-//                let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-//                alertController.addAction(defaultAction)
-//                self.present(alertController, animated: true, completion: nil)
-//              }
-//            }
-//          }
-////
-//
-//        }
-//      } catch let error {
-//        print("\(error)")
-//      }
     }
   }
   
   func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
     picker.dismiss(animated: true, completion: nil)
-  }
-  
-  func exportSession(_ exportSession: AssetExportSession?, renderFrame pixelBuffer: CVPixelBuffer?, withPresentationTime presentationTime: CMTime, to renderBuffer: CVPixelBuffer?) {
-    print(exportSession)
-  }
-  
-  func exportSession(_ exportSession: SDAVAssetExportSession!, renderFrame pixelBuffer: CVPixelBuffer!, withPresentationTime presentationTime: CMTime, to renderBuffer: CVPixelBuffer!) {
-    print(exportSession)
   }
   
   
@@ -165,7 +121,6 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     }
     //create an avassetrack with our asset
     let naturalSize = videoTrack.naturalSize
-//    var clipVideoTrack: AVAssetTrack? = asset.tracks(withMediaType: .video)[0]
     //create a video composition and preset some settings
     let  videoComposition = AVMutableVideoComposition(propertiesOf: asset)
     videoComposition.frameDuration = CMTimeMake(1, 30)
@@ -176,11 +131,6 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30))
     let transformer: AVMutableVideoCompositionLayerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
     
-    
-    //Here we shift the viewing square up to the TOP of the video so we only see the top
-//    let widthDelta: CGFloat = videoTrack.naturalSize.width - desiredSize.width
-//    let heightDelta: CGFloat = videoTrack.naturalSize.height - desiredSize.height
-//
     
     let ratio: CGFloat = 4/3
     let xratio: CGFloat = targetSize.width / naturalSize.width
@@ -194,22 +144,10 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     transform = transform.concatenating(matrix)
     let t = transform.concatenating(CGAffineTransform(scaleX: 1.3, y: 1.3))
     
-
-    
-//    let t1 = CGAffineTransform(translationX: targetSize.width, y: targetSize.height)
-//
-//    let t2: CGAffineTransform = t1.rotated(by: CGFloat.pi)
-//    let finalTransform: CGAffineTransform = t2
-//
     transformer.setTransform(t, at: kCMTimeZero)
     
     instruction.layerInstructions = [transformer]
     videoComposition.instructions = [instruction]
-    
-    
-    
-    
-    
     
     //Remove any prevouis videos at that path
     try? FileManager.default.removeItem(at: outputUrl)
