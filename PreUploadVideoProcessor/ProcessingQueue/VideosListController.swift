@@ -105,7 +105,31 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
       picker.dismiss(animated: true, completion: nil)
       let tempDirectory = NSTemporaryDirectory()
       let processedURL = URL(fileURLWithPath: tempDirectory.appending(UUID().uuidString).appending(".mp4"))
-      self.cropVideo(url: videoURL, outputUrl: processedURL)
+      do {
+        try self.cropVideo(url: videoURL, outputUrl: processedURL)
+      } catch let error {
+        switch error {
+        case VideoAssetExportError.nilVideoTrack:
+          break
+        case VideoAssetExportError.portraitVideo:
+         break
+        default:
+          break
+        }
+      }
+      DispatchQueue.main.async(execute: {
+        //Call when finished
+        PHPhotoLibrary.shared().performChanges({
+          PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: processedURL)
+        }) { saved, error in
+          if saved {
+            let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
+            let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+            alertController.addAction(defaultAction)
+            self.present(alertController, animated: true, completion: nil)
+          }
+        }
+      })
     }
   }
   
@@ -114,13 +138,16 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
   }
   
   
-  func cropVideo(url: URL, outputUrl: URL, targetSize: CGSize = CGSize(width: 600, height: 400)) {
+  func cropVideo(url: URL, outputUrl: URL, targetSize: CGSize = CGSize(width: 600, height: 400)) throws -> Bool {
     let asset = AVAsset(url: url)
     guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-      return
+      throw VideoAssetExportError.nilVideoTrack
     }
     //create an avassetrack with our asset
     let naturalSize = videoTrack.naturalSize
+    if naturalSize.width < naturalSize.height {
+      throw VideoAssetExportError.portraitVideo
+    }
     //create a video composition and preset some settings
     let  videoComposition = AVMutableVideoComposition(propertiesOf: asset)
     videoComposition.frameDuration = CMTimeMake(1, 30)
@@ -132,7 +159,7 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     let transformer: AVMutableVideoCompositionLayerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
     
     
-    let ratio: CGFloat = 4/3
+    let ratio: CGFloat = targetSize.width < targetSize.height ? targetSize.height / targetSize.width: targetSize.width / targetSize.height
     let xratio: CGFloat = targetSize.width / naturalSize.width
     let yratio: CGFloat = targetSize.height / naturalSize.height
     let postWidth: CGFloat = naturalSize.width * ratio
@@ -142,7 +169,7 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     let matrix = CGAffineTransform(translationX: transx / xratio, y: transy / yratio)
     var transform = videoTrack.preferredTransform
     transform = transform.concatenating(matrix)
-    let t = transform.concatenating(CGAffineTransform(scaleX: 1.3, y: 1.3))
+    let t = transform.concatenating(CGAffineTransform(scaleX: ratio, y: ratio))
     
     transformer.setTransform(t, at: kCMTimeZero)
     
@@ -156,20 +183,16 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
     exporter.videoComposition = videoComposition
     exporter.outputURL = outputUrl
     exporter.outputFileType = .mp4
+    let dispatchGroup = DispatchGroup()
+    dispatchGroup.enter()
     exporter.exportAsynchronously(completionHandler: {
-      DispatchQueue.main.async(execute: {
-        //Call when finished
-        PHPhotoLibrary.shared().performChanges({
-          PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: outputUrl)
-        }) { saved, error in
-          if saved {
-            let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
-            let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-            alertController.addAction(defaultAction)
-            self.present(alertController, animated: true, completion: nil)
-          }
-        }
-      })
+      dispatchGroup.leave()
     })
+    let awaitResult = dispatchGroup.wait(timeout: .distantFuture)
+    return awaitResult == .success
   }
+}
+enum VideoAssetExportError: Error {
+  case nilVideoTrack
+  case portraitVideo
 }
