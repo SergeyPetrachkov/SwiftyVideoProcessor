@@ -1,0 +1,16 @@
+PODS:
+  - SwiftyVideoExporter (1.0.1)
+
+DEPENDENCIES:
+  - SwiftyVideoExporter
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - SwiftyVideoExporter
+
+SPEC CHECKSUMS:
+  SwiftyVideoExporter: e48b02b4a11bd67c4fbf1398cf4e4b1ac91aa678
+
+PODFILE CHECKSUM: 8f0d7813328d3589a271359fdc7a5dea6c1b8565
+
+COCOAPODS: 1.5.3

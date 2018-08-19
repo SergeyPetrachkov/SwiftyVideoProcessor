@@ -12,6 +12,7 @@ import AVFoundation
 import AVKit
 import Photos
 
+import SwiftyVideoExporter
 
 class WCITNavigationController: UINavigationController {
   override func viewDidLoad() {
@@ -54,7 +55,7 @@ extension UIViewController {
 
 
 class VideosListController: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-  
+  let exporterService: VideoProcessingServiceProtocol = VideoProcessingService()
   let imagePickerController: UIImagePickerController = {
     let controller = UIImagePickerController()
     controller.sourceType = .photoLibrary
@@ -106,93 +107,44 @@ class VideosListController: UITableViewController, UIImagePickerControllerDelega
       let tempDirectory = NSTemporaryDirectory()
       let processedURL = URL(fileURLWithPath: tempDirectory.appending(UUID().uuidString).appending(".mp4"))
       do {
-        try self.cropVideo(url: videoURL, outputUrl: processedURL)
+        let processingParams = try VideoProcessingParameters(sourceURL: videoURL,
+                                                              outputURL: processedURL,
+                                                              targetFrameSize: CGSize(width: 600,
+                                                                                      height: 400),
+                                                              outputFileType: .mp4)!
+        let output = try self.exporterService.processVideo(processingParameters: processingParams)
+        if let error = output.error {
+          throw error
+        }
+        DispatchQueue.main.async(execute: {
+          //Call when finished
+          PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: output.inputParams.outputUrl)
+          }) { saved, error in
+            if saved {
+              let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
+              let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+              alertController.addAction(defaultAction)
+              self.present(alertController, animated: true, completion: nil)
+            }
+          }
+        })
       } catch let error {
         switch error {
         case VideoAssetExportError.nilVideoTrack:
           break
-        case VideoAssetExportError.portraitVideo:
-         break
+        case VideoAssetExportError.portraitVideoNotSupported:
+          break
         default:
           break
         }
       }
-      DispatchQueue.main.async(execute: {
-        //Call when finished
-        PHPhotoLibrary.shared().performChanges({
-          PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: processedURL)
-        }) { saved, error in
-          if saved {
-            let alertController = UIAlertController(title: "Your video was successfully saved", message: nil, preferredStyle: .alert)
-            let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-            alertController.addAction(defaultAction)
-            self.present(alertController, animated: true, completion: nil)
-          }
-        }
-      })
     }
   }
   
   func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
     picker.dismiss(animated: true, completion: nil)
   }
-  
-  
-  func cropVideo(url: URL, outputUrl: URL, targetSize: CGSize = CGSize(width: 600, height: 400)) throws -> Bool {
-    let asset = AVAsset(url: url)
-    guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-      throw VideoAssetExportError.nilVideoTrack
-    }
-    //create an avassetrack with our asset
-    let naturalSize = videoTrack.naturalSize
-    if naturalSize.width < naturalSize.height {
-      throw VideoAssetExportError.portraitVideo
-    }
-    //create a video composition and preset some settings
-    let  videoComposition = AVMutableVideoComposition(propertiesOf: asset)
-    videoComposition.frameDuration = CMTimeMake(1, 30)
-    //here we are setting its render size to its height x height (Square)
-    videoComposition.renderSize = CGSize(width: targetSize.width, height: targetSize.height)
-    //create a video instruction
-    let instruction = AVMutableVideoCompositionInstruction()
-    instruction.timeRange = CMTimeRangeMake(kCMTimeZero, CMTimeMakeWithSeconds(60, 30))
-    let transformer: AVMutableVideoCompositionLayerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
-    
-    
-    let ratio: CGFloat = targetSize.width < targetSize.height ? targetSize.height / targetSize.width: targetSize.width / targetSize.height
-    let xratio: CGFloat = targetSize.width / naturalSize.width
-    let yratio: CGFloat = targetSize.height / naturalSize.height
-    let postWidth: CGFloat = naturalSize.width * ratio
-    let postHeight: CGFloat = naturalSize.height * ratio
-    let transx: CGFloat = (targetSize.width - postWidth) / 2
-    let transy: CGFloat = (targetSize.height - postHeight) / 2
-    let matrix = CGAffineTransform(translationX: transx / xratio, y: transy / yratio)
-    var transform = videoTrack.preferredTransform
-    transform = transform.concatenating(matrix)
-    let t = transform.concatenating(CGAffineTransform(scaleX: ratio, y: ratio))
-    
-    transformer.setTransform(t, at: kCMTimeZero)
-    
-    instruction.layerInstructions = [transformer]
-    videoComposition.instructions = [instruction]
-    
-    //Remove any prevouis videos at that path
-    try? FileManager.default.removeItem(at: outputUrl)
-    //Export
-    let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality)!
-    exporter.videoComposition = videoComposition
-    exporter.outputURL = outputUrl
-    exporter.outputFileType = .mp4
-    let dispatchGroup = DispatchGroup()
-    dispatchGroup.enter()
-    exporter.exportAsynchronously(completionHandler: {
-      dispatchGroup.leave()
-    })
-    let awaitResult = dispatchGroup.wait(timeout: .distantFuture)
-    return awaitResult == .success
-  }
+ 
 }
-enum VideoAssetExportError: Error {
-  case nilVideoTrack
-  case portraitVideo
-}
+

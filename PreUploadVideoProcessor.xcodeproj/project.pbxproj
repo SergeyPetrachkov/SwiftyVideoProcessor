@@ -13,6 +13,7 @@
 		398C1A6C2122F1E800E7BF4B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 398C1A6B2122F1E800E7BF4B /* Assets.xcassets */; };
 		398C1A6F2122F1E800E7BF4B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 398C1A6D2122F1E800E7BF4B /* LaunchScreen.storyboard */; };
 		398C1A782122F3CC00E7BF4B /* VideosListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398C1A772122F3CC00E7BF4B /* VideosListController.swift */; };
+		DAD647EA9EBB0ADD2D12F1E6 /* Pods_PreUploadVideoProcessor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43046150E2304774C2ADB7A7 /* Pods_PreUploadVideoProcessor.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,9 @@
 		398C1A6E2122F1E800E7BF4B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		398C1A702122F1E800E7BF4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		398C1A772122F3CC00E7BF4B /* VideosListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideosListController.swift; sourceTree = "<group>"; };
+		43046150E2304774C2ADB7A7 /* Pods_PreUploadVideoProcessor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PreUploadVideoProcessor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DA176AE6044A7866D88275A /* Pods-PreUploadVideoProcessor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PreUploadVideoProcessor.release.xcconfig"; path = "Pods/Target Support Files/Pods-PreUploadVideoProcessor/Pods-PreUploadVideoProcessor.release.xcconfig"; sourceTree = "<group>"; };
+		E6533E594288B0E8D6041C55 /* Pods-PreUploadVideoProcessor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PreUploadVideoProcessor.debug.xcconfig"; path = "Pods/Target Support Files/Pods-PreUploadVideoProcessor/Pods-PreUploadVideoProcessor.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,6 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAD647EA9EBB0ADD2D12F1E6 /* Pods_PreUploadVideoProcessor.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,6 +47,8 @@
 			children = (
 				398C1A632122F1E700E7BF4B /* PreUploadVideoProcessor */,
 				398C1A622122F1E700E7BF4B /* Products */,
+				658D288446E2C29541024131 /* Pods */,
+				F4AE4B8373DE202BAC2BBDBA /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -75,6 +82,23 @@
 			path = ProcessingQueue;
 			sourceTree = "<group>";
 		};
+		658D288446E2C29541024131 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E6533E594288B0E8D6041C55 /* Pods-PreUploadVideoProcessor.debug.xcconfig */,
+				5DA176AE6044A7866D88275A /* Pods-PreUploadVideoProcessor.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		F4AE4B8373DE202BAC2BBDBA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				43046150E2304774C2ADB7A7 /* Pods_PreUploadVideoProcessor.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -82,9 +106,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 398C1A732122F1E800E7BF4B /* Build configuration list for PBXNativeTarget "PreUploadVideoProcessor" */;
 			buildPhases = (
+				D91FEDFD859B4B613467105D /* [CP] Check Pods Manifest.lock */,
 				398C1A5D2122F1E700E7BF4B /* Sources */,
 				398C1A5E2122F1E700E7BF4B /* Frameworks */,
 				398C1A5F2122F1E700E7BF4B /* Resources */,
+				D44A4974406BA0B323EC8D31 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -141,6 +167,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D44A4974406BA0B323EC8D31 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-PreUploadVideoProcessor/Pods-PreUploadVideoProcessor-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/SwiftyVideoExporter/SwiftyVideoExporter.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyVideoExporter.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-PreUploadVideoProcessor/Pods-PreUploadVideoProcessor-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D91FEDFD859B4B613467105D /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-PreUploadVideoProcessor-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		398C1A5D2122F1E700E7BF4B /* Sources */ = {
@@ -291,6 +356,7 @@
 		};
 		398C1A742122F1E800E7BF4B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E6533E594288B0E8D6041C55 /* Pods-PreUploadVideoProcessor.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -312,6 +378,7 @@
 		};
 		398C1A752122F1E800E7BF4B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5DA176AE6044A7866D88275A /* Pods-PreUploadVideoProcessor.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
